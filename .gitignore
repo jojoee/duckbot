@@ -134,3 +134,9 @@ dmypy.json
 # project
 exclude
 config.ini
+dist
+build
+tmp.md
+example.py
+zone.csv
+statement.csv
