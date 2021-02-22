@@ -1,10 +1,6 @@
 from typing import List, Tuple
-from helper.helper import (
-    id_to_str,
-    safe_cast,
-    parse_to_dataclass,
-    TradingPosition
-)
+from helper.dataclass import TradingPosition
+from helper.helper import id_to_str, safe_cast, parse_to_dataclass
 
 
 # test helper
