@@ -29,13 +29,13 @@
        - name: Lint with flake8
          run: |
            # all Python files should follow PEP8 (except some notebooks, see setup.cfg)
-           python -m flake8 --ignore=E501 duckbot.py tests
+           python -m flake8 --ignore=E501 duckbot.py helper tests
 
-       - name: Setup config.ini file
-         run: cp ./config.ini.example ./config.ini
+       - name: Setup project
+         run: |
+           cp ./example/config.example.ini ./config.ini
+           cp ./example/zone.example.csv ./zone.csv
+           cp ./example/statement.example.csv ./statement.csv
 
        - name: Test with pytest
          run: python -m pytest tests --cov=./ --cov-report=xml
-
-       - name: Upload coverage to Codecov
-         uses: codecov/codecov-action@v1
