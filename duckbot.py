@@ -4,7 +4,7 @@ import gc
 import pandas as pd
 import numpy as np
 import ccxt
-from helper.config import API_KEY, API_SECRET, SUB_ACCOUNT, SYMBOL, TAKE_PROFIT_PC, COMPOUND_PC, debug_config
+from helper.config import API_KEY, API_SECRET, SUB_ACCOUNT, SYMBOL, TAKE_PROFIT_PC, COMPOUND_PC, ensure_config
 from helper.dataclass import TradingFeesResponse, Zone, Ticker, LimitOrder, Statement
 from helper.helper import parse_to_dataclass
 from helper.botlogger import BotLogger
@@ -18,7 +18,7 @@ CLOSED_SELL_STATUS = "closed"
 CANCELED_SELL_STATUS = "canceled"
 
 # debug and setup
-debug_config()
+ensure_config()
 LOGGER = BotLogger(SUB_ACCOUNT)
 FTX = ccxt.ftx({"apiKey": API_KEY, "secret": API_SECRET, "enableRateLimit": True})
 FTX.headers = {"FTX-SUBACCOUNT": SUB_ACCOUNT} if len(SUB_ACCOUNT) > 0 else {}

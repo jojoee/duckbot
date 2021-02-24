@@ -1,6 +1,7 @@
 import configparser
 from pprint import pprint
 import os
+import sys
 
 # https://docs.python.org/3/library/configparser.html
 config = configparser.ConfigParser()
@@ -27,11 +28,21 @@ os.environ['TZ'] = TIMEZONE
 
 
 def blackout(s: str, n_left: int = 4) -> str:
+    if len(s) <= n_left: return ""
     return "*" * len(s[:-n_left]) + s[-n_left:]
 
 
-def debug_config():
-    pprint({
+def ensure_config():
+    global LINE_TOKEN
+    global API_KEY
+    global API_SECRET
+    global SUB_ACCOUNT
+    global SYMBOL
+    global TAKE_PROFIT_PC
+    global COMPOUND_PC
+
+    # debug
+    obj = {
         "LINE_TOKEN": blackout(LINE_TOKEN),
         "API_KEY": blackout(API_KEY),
         "API_SECRET": blackout(API_SECRET),
@@ -39,4 +50,14 @@ def debug_config():
         "SYMBOL": SYMBOL,
         "TAKE_PROFIT_PC": TAKE_PROFIT_PC,
         "COMPOUND_PC": COMPOUND_PC,
-    })
+    }
+    pprint(obj)
+
+    # validate
+    is_valid = True
+    for o in obj:
+        if obj[o] == "" or obj[o] == 0:
+            is_valid = False
+            print(f"{o} must be provided")
+    if not is_valid:
+        sys.exit()
