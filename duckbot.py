@@ -385,5 +385,5 @@ while True:
     except Exception as e:
         LOGGER.error(f"{SYMBOL} error: {e}")
 
-    LOGGER.info(f'waiting {sleep_secs} seconds for the new process')
+    LOGGER.debug(f'waiting {sleep_secs} seconds for the new process')
     time.sleep(60)

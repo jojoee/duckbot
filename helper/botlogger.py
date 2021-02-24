@@ -23,10 +23,10 @@ formatter = logging.Formatter('%(asctime)s %(name)s %(levelname)s %(message)s')
 class BotLogger:
     name: str = ''
     path: str = ''  # log path
-    logger = None
+    file_logger = None
+    console_logger = None
 
-    def get_logger(self, name, path):
-        # file handler
+    def get_file_logger(self, name, path):
         file_handler = TimedRotatingFileHandler(
             path,
             when="midnight",
@@ -37,14 +37,23 @@ class BotLogger:
         file_handler.suffix = "%Y%m%d"
         file_handler.setFormatter(formatter)
 
+        # logger
+        logger = logging.getLogger(name)
+        logger.addHandler(file_handler)
+        logger.setLevel(logging.DEBUG)
+
+        return logger
+
+    def get_console_logger(self, name):
         # console handler
         # https://stackoverflow.com/questions/13733552/logger-configuration-to-log-to-file-and-print-to-stdout
         console_handler = logging.StreamHandler(sys.stdout)
         console_handler.setFormatter(formatter)
 
         # logger
-        logger = logging.getLogger(name)
-        logger.addHandler(file_handler)
+        # https://docs.python.org/3/library/logging.html
+        # Multiple calls to getLogger() with the same name will always return a reference to the same Logger object.
+        logger = logging.getLogger("console-%s" % name)
         logger.addHandler(console_handler)
         logger.setLevel(logging.DEBUG)
 
@@ -53,15 +62,18 @@ class BotLogger:
     def __init__(self, name):
         self.name = name
         self.path = 'log/%s.log' % self.name
-        self.logger = self.get_logger(self.name, self.path)
+        self.file_logger = self.get_file_logger(self.name, self.path)
+        self.console_logger = self.get_console_logger(self.name)
 
     def debug(self, msg: str):
-        self.logger.debug(msg)
+        self.console_logger.debug(msg)
 
     def info(self, msg: str):
-        self.logger.info(msg)
+        self.console_logger.info(msg)
+        self.file_logger.info(msg)
         line(msg)
 
     def error(self, msg: str):
-        self.logger.error(msg)
+        self.console_logger.error(msg)
+        self.file_logger.error(msg)
         line(msg)
