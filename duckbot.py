@@ -22,6 +22,8 @@ CANCELED_SELL_STATUS = "canceled"
 
 # debug and setup
 ensure_config()
+if os.environ.get('ENVIRONMENT') == 'debug':
+    sys.exit()
 LOGGER = BotLogger(SUB_ACCOUNT)
 FTX = ccxt.ftx({"apiKey": API_KEY, "secret": API_SECRET, "enableRateLimit": True})
 FTX.headers = {"FTX-SUBACCOUNT": SUB_ACCOUNT} if len(SUB_ACCOUNT) > 0 else {}
@@ -391,8 +393,6 @@ def wakeup_bot():
 
 
 # init
-if os.environ.get('ENVIRONMENT') == 'debug':
-    sys.exit()
 wakeup_bot()
 
 # schedule
