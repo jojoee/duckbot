@@ -4,6 +4,7 @@ import gc
 import pandas as pd
 import numpy as np
 import ccxt
+import schedule
 from helper.config import API_KEY, API_SECRET, SUB_ACCOUNT, SYMBOL, TAKE_PROFIT_PC, COMPOUND_PC, ensure_config
 from helper.dataclass import TradingFeesResponse, Zone, Ticker, LimitOrder, Statement
 from helper.helper import parse_to_dataclass
@@ -362,12 +363,11 @@ def main():
         time.sleep(0.15)  # To avoid reaching maximum API call per sec (30 times)
 
 
-# TODO: implement health check every 1 hour
+def healthcheck():
+    LOGGER.info("I'm ok healthcheck: ok")
 
-# TODO: use timer/scheduler instead
-while True:
-    sleep_secs = 60
 
+def wakeup_bot():
     try:
         """
         TODO: optimize
@@ -385,5 +385,17 @@ while True:
     except Exception as e:
         LOGGER.error(f"{SYMBOL} error: {e}")
 
-    LOGGER.debug(f'waiting {sleep_secs} seconds for the new process')
-    time.sleep(60)
+    LOGGER.debug(f'waiting 60 seconds for the new process')
+
+
+# init
+wakeup_bot()
+
+# schedule
+# it will behave like, waiting for 60 seconds after the job is completed
+schedule.every(1).minutes.do(wakeup_bot)
+schedule.every(1).hour.do(healthcheck)
+
+while True:
+    schedule.run_pending()
+    time.sleep(1)
