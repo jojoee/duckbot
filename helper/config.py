@@ -28,7 +28,8 @@ os.environ['TZ'] = TIMEZONE
 
 
 def blackout(s: str, n_left: int = 4) -> str:
-    if len(s) <= n_left: return ""
+    if len(s) <= n_left:
+        return ""
     return "*" * len(s[:-n_left]) + s[-n_left:]
 
 

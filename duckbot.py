@@ -387,11 +387,12 @@ def wakeup_bot():
     except Exception as e:
         LOGGER.error(f"{SYMBOL} error: {e}")
 
-    LOGGER.debug(f'waiting 60 seconds for the new process')
+    LOGGER.debug('waiting 60 seconds for the new process')
 
 
 # init
-if os.environ.get('ENVIRONMENT') == 'debug': sys.exit()
+if os.environ.get('ENVIRONMENT') == 'debug':
+    sys.exit()
 wakeup_bot()
 
 # schedule
