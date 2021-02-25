@@ -1,4 +1,6 @@
 import time
+import os
+import sys
 from typing import List
 import gc
 import pandas as pd
@@ -389,6 +391,7 @@ def wakeup_bot():
 
 
 # init
+if os.environ.get('ENVIRONMENT') == 'debug': sys.exit()
 wakeup_bot()
 
 # schedule

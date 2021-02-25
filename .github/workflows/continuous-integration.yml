@@ -39,3 +39,6 @@
 
        - name: Test with pytest
          run: python -m pytest tests --cov=./ --cov-report=xml
+
+       - name: Test run app
+         run: ENVIRONMENT=debug python duckbot.py
