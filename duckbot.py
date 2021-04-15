@@ -7,10 +7,11 @@ import pandas as pd
 import numpy as np
 import ccxt
 import schedule
-from helper.config import API_KEY, API_SECRET, SUB_ACCOUNT, SYMBOL, TAKE_PROFIT_PC, COMPOUND_PC, ensure_config
+from helper.botconfig import BotConfig
 from helper.dataclass import TradingFeesResponse, Zone, Ticker, LimitOrder, Statement
 from helper.helper import parse_to_dataclass
 from helper.botlogger import BotLogger
+import os
 
 # const
 OPEN_BUY_STATUS = "open"
@@ -20,20 +21,31 @@ OPEN_SELL_STATUS = "open"
 CLOSED_SELL_STATUS = "closed"
 CANCELED_SELL_STATUS = "canceled"
 
+# validate cli input
+if len(sys.argv) < 2 or not sys.argv[1]:
+    print('invalid bot directory')
+    sys.exit()
+else:
+    print("loading from %s" % sys.argv[1])
+
 # debug and setup
-ensure_config()
+BOT_DIR = sys.argv[1]
 if os.environ.get('ENVIRONMENT') == 'debug':
     sys.exit()
-LOGGER = BotLogger(SUB_ACCOUNT)
-FTX = ccxt.ftx({"apiKey": API_KEY, "secret": API_SECRET, "enableRateLimit": True})
-FTX.headers = {"FTX-SUBACCOUNT": SUB_ACCOUNT} if len(SUB_ACCOUNT) > 0 else {}
+
+BOT_CONFIG = BotConfig(BOT_DIR)
+BOT_CONFIG.ensure_config()
+LOGGER = BotLogger(BOT_CONFIG.sub_account, BOT_CONFIG.line_token)
+
+FTX = ccxt.ftx({"apiKey": BOT_CONFIG.api_key, "secret": BOT_CONFIG.api_secret, "enableRateLimit": True})
+FTX.headers = {"FTX-SUBACCOUNT": BOT_CONFIG.sub_account} if len(BOT_CONFIG.sub_account) > 0 else {}
 fee: TradingFeesResponse = parse_to_dataclass(FTX.fetch_trading_fees())
 FEE_TAKER = fee.taker  # limit order
 
 # algorithm setup
-ZONE_FILE_PATH = './zone.csv'
+ZONE_FILE_PATH = os.path.join(BOT_DIR, 'zone.csv')
 ZONES: List[Zone] = []
-STATEMENT_FILE_PATH = './statement.csv'
+STATEMENT_FILE_PATH = os.path.join(BOT_DIR, 'statement.csv')
 
 
 def save_zones() -> None:
@@ -109,7 +121,7 @@ def main():
         zone: Zone = ZONES[i]
 
         # get latest price and time
-        ticker: Ticker = parse_to_dataclass(FTX.fetch_ticker(SYMBOL))
+        ticker: Ticker = parse_to_dataclass(FTX.fetch_ticker(BOT_CONFIG.symbol))
         last_price = ticker.last
         last_time = ticker.datetime
 
@@ -122,7 +134,7 @@ def main():
                     # perform market-order
                     # assumption: right liquidity (no big gap of buy-sell order)
                     # so we buy at "ask" price
-                    current_ticket: Ticker = parse_to_dataclass(FTX.fetch_ticker(SYMBOL))
+                    current_ticket: Ticker = parse_to_dataclass(FTX.fetch_ticker(BOT_CONFIG.symbol))
                     buy_price = current_ticket.ask
                     txt_action = "Buy collective order"
                 else:
@@ -132,7 +144,7 @@ def main():
                 # open limit buy order
                 buy_unit = zone.zone_amount / buy_price
                 order_result: LimitOrder = parse_to_dataclass(FTX.create_order(
-                    SYMBOL, "limit", "buy", buy_unit, buy_price
+                    BOT_CONFIG.symbol, "limit", "buy", buy_unit, buy_price
                 ))
 
                 # Update & save zone.csv
@@ -154,11 +166,11 @@ def main():
 
                 # log
                 amt = buy_unit * order_result.price
-                msg = f"{SYMBOL} Zone {zone.zone_price}: {txt_action} amount($) : {amt}"
+                msg = f"{BOT_CONFIG.symbol} Zone {zone.zone_price}: {txt_action} amount($) : {amt}"
                 LOGGER.info(msg)
 
             except Exception as e:
-                msg = f"{SYMBOL} Error : {e}"
+                msg = f"{BOT_CONFIG.symbol} Error : {e}"
                 LOGGER.error(msg)
 
                 # TODO: implement parent-try-catch instead
@@ -179,12 +191,12 @@ def main():
                     ZONES[i].buy_status = updated_buy_status
                     save_zones()
 
-                msg = f"{SYMBOL} Zone {zone.zone_price} : {txt_action} "
+                msg = f"{BOT_CONFIG.symbol} Zone {zone.zone_price} : {txt_action} "
                 LOGGER.debug(msg)
 
             except Exception as e:
                 # TODO: implement parent-try-catch instead
-                msg = f"{SYMBOL} Error : {e}"
+                msg = f"{BOT_CONFIG.symbol} Error : {e}"
                 LOGGER.error(msg)
 
                 time.sleep(10)
@@ -208,7 +220,7 @@ def main():
                     # TAKE_PROFIT_PC = 1.5, create TP at 1.5% from the buy-order
                     # need "max(zone.zone_price, zone.buy_price)"
                     # cause sometime the "ask" (buy_price) already over the zone_price
-                    sell_price = (1 + TAKE_PROFIT_PC / 100) * max(zone.zone_price, zone.buy_price)
+                    sell_price = (1 + BOT_CONFIG.take_profit_pc / 100) * max(zone.zone_price, zone.buy_price)
 
                     # to avoid incremental size problem, actually it should be buy_recive_unit
                     # TODO: why not buy_recive_unit
@@ -216,7 +228,7 @@ def main():
                     # sell_unit = zone.buy_recive_unit
 
                     order_result: LimitOrder = parse_to_dataclass(FTX.create_order(
-                        SYMBOL, "limit", "sell", sell_unit, sell_price
+                        BOT_CONFIG.symbol, "limit", "sell", sell_unit, sell_price
                     ))
 
                     # Update & save zone.csv
@@ -233,11 +245,11 @@ def main():
                     save_zones()
 
                     txt_action = "Open limit sell order"
-                    msg = f"{SYMBOL} Zone {zone.zone_price} : {txt_action}  amount($) : {sell_amount}"
+                    msg = f"{BOT_CONFIG.symbol} Zone {zone.zone_price} : {txt_action}  amount($) : {sell_amount}"
                     LOGGER.info(msg)
 
                 except Exception as e:
-                    msg = f"{SYMBOL} Error : {e}"
+                    msg = f"{BOT_CONFIG.symbol} Error : {e}"
                     LOGGER.error(msg)
                     time.sleep(10)
 
@@ -254,11 +266,11 @@ def main():
                         save_zones()
                         txt_action = f"Save updated sell status ({updated_sell_status})"
 
-                    msg = f"{SYMBOL} Zone {zone.zone_price} : {txt_action} "
+                    msg = f"{BOT_CONFIG.symbol} Zone {zone.zone_price} : {txt_action} "
                     LOGGER.debug(msg)
 
                 except Exception as e:
-                    msg = f"{SYMBOL} Error : {e}"
+                    msg = f"{BOT_CONFIG.symbol} Error : {e}"
                     LOGGER.error(msg)
                     time.sleep(10)
 
@@ -275,12 +287,12 @@ def main():
 
                 # COMPOUND_PC=50
                 # we take the 50% from profit then re-invest into this zone
-                ZONES[i].zone_amount = zone.zone_amount + round(net_profit * COMPOUND_PC / 100, 2)
+                ZONES[i].zone_amount = zone.zone_amount + round(net_profit * BOT_CONFIG.compound_pc / 100, 2)
                 ZONES[i].sell_close_time = last_time
 
                 # Update statement
                 statement = Statement(
-                    symbol=SYMBOL,
+                    symbol=BOT_CONFIG.symbol,
                     net_profit=net_profit,
 
                     buy_fee_amount=buy_fee_amount,  # new
@@ -317,7 +329,7 @@ def main():
                 save_zones()
 
                 # log
-                msg = f"{SYMBOL} Zone {zone.zone_price} : Profit($) : {net_profit}"
+                msg = f"{BOT_CONFIG.symbol} Zone {zone.zone_price} : Profit($) : {net_profit}"
                 LOGGER.info(msg)
 
             # TODO: manual cancel sell order
@@ -337,7 +349,7 @@ def main():
                 save_zones()
 
                 # log
-                msg = f"{SYMBOL} Zone {zone.zone_price} : Remove canceled sell order"
+                msg = f"{BOT_CONFIG.symbol} Zone {zone.zone_price} : Remove canceled sell order"
                 LOGGER.debug(msg)
 
             else:
@@ -357,7 +369,7 @@ def main():
             ZONES[i].buy_status = None
             ZONES[i].buy_close_time = None
             save_zones()
-            msg = f"{SYMBOL} Zone {zone.zone_price}: Remove canceled buy order"
+            msg = f"{BOT_CONFIG.symbol} Zone {zone.zone_price}: Remove canceled buy order"
             LOGGER.debug(msg)
 
         else:
@@ -387,7 +399,7 @@ def wakeup_bot():
             gc.collect()  # forcing garbage collection
 
     except Exception as e:
-        LOGGER.error(f"{SYMBOL} error: {e}")
+        LOGGER.error(f"{BOT_CONFIG.symbol} error: {e}")
 
     LOGGER.debug('waiting 60 seconds for the new process')
 

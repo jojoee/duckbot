@@ -4,7 +4,7 @@ import datetime
 from pytz import timezone
 import sys
 from helper.config import TIMEZONE
-from helper.notification import line
+from helper.notification import Notification
 
 """
 https://stackoverflow.com/questions/44718204/python-how-to-create-log-file-everyday-using-logging-module
@@ -22,6 +22,7 @@ formatter = logging.Formatter('%(asctime)s %(name)s %(levelname)s %(message)s')
 
 class BotLogger:
     name: str = ''
+    notification: Notification
     path: str = ''  # log path
     file_logger = None
     console_logger = None
@@ -59,8 +60,9 @@ class BotLogger:
 
         return logger
 
-    def __init__(self, name):
+    def __init__(self, name, line_token):
         self.name = name
+        self.notification = Notification(line_token)
         self.path = 'log/%s.log' % self.name
         self.file_logger = self.get_file_logger(self.name, self.path)
         self.console_logger = self.get_console_logger(self.name)
@@ -71,9 +73,9 @@ class BotLogger:
     def info(self, msg: str):
         self.console_logger.info(msg)
         self.file_logger.info(msg)
-        line(msg)
+        self.notification.line(msg)
 
     def error(self, msg: str):
         self.console_logger.error(msg)
         self.file_logger.error(msg)
-        line(msg)
+        self.notification.line(msg)
