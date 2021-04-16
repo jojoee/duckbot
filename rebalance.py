@@ -5,7 +5,8 @@ import pandas as pd
 import ccxt
 import sys
 import os
-from helper.dataclass import Ticker, LimitOrder, Balance, OpenOrderResponse, CancelAllOrdersResponse
+from typing import List
+from helper.dataclass import Ticker, LimitOrder, Balance, LimitOrderInfo
 from helper.helper import parse_to_dataclass
 from helper.botlogger import BotLogger
 import configparser
@@ -77,10 +78,10 @@ def reblance():
         cols = ['symbol', 'id', 'price', 'side', 'amount', 'datetime']
 
         # close all open orders
-        open_order_response: OpenOrderResponse = parse_to_dataclass(FTX.fetch_open_orders(symbol))
-        if len(open_order_response.result) >= 1:
-            res: CancelAllOrdersResponse = parse_to_dataclass(FTX.cancel_all_orders(symbol))
-            LOGGER.info(res.res)
+        open_orders: List[LimitOrderInfo] = parse_to_dataclass(FTX.fetch_open_orders(symbol))
+        if len(open_orders) >= 1:
+            message: parse_to_dataclass(FTX.cancel_all_orders(symbol))
+            LOGGER.info(message)
 
         if coin_ratio > UPPER_LIMIT:
             sell_unit = (coin_ratio - COIN_TARGET_PC / 100) * port_value / sell_price

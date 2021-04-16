@@ -171,18 +171,6 @@ class LimitOrder:
 
 
 @dataclass(frozen=True)
-class OpenOrderResponse:
-    success: bool
-    result: List[LimitOrderInfo]
-
-
-@dataclass(frozen=True)
-class CancelAllOrdersResponse:
-    success: bool
-    result: str  # e.g."Orders queued for cancelation"
-
-
-@dataclass(frozen=True)
 class BalanceInfoResult:
     coin: str  # e.g. "BNB", "USD"
     total: float  # e.g. 0.6389626
