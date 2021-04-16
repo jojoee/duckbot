@@ -168,3 +168,68 @@ class LimitOrder:
     status: str
     fee: None
     trades: None
+
+
+@dataclass(frozen=True)
+class OpenOrderResponse:
+    success: bool
+    result: List[LimitOrderInfo]
+
+
+@dataclass(frozen=True)
+class CancelAllOrdersResponse:
+    success: bool
+    result: str  # e.g."Orders queued for cancelation"
+
+
+@dataclass(frozen=True)
+class BalanceInfoResult:
+    coin: str  # e.g. "BNB", "USD"
+    total: float  # e.g. 0.6389626
+    free: float  # e.g. 0.2389626,
+    availableWithoutBorrow: float  # e.g. 0.2389626
+    usdValue: float  # e.g. 168.7672754552929
+    spotBorrow: float  # e.g. 0.0
+
+
+@dataclass(frozen=True)
+class BalanceInfo:
+    success: bool
+    result: List[BalanceInfoResult]
+
+
+@dataclass(frozen=True)
+class Balance:
+    info: BalanceInfo
+    # there are more keys in here but can be ignored for now
+
+    free: Any
+    used: Any
+    total: Any
+
+    """
+    e.g.
+    'info': ...,
+    'BNB': {
+        'free': 0.08994015,
+        'used': 0.0,
+        'total': 0.08994015
+    },
+    'USD': {
+        'free': 500.02723,
+        'used': 0.0,
+        'total': 500.02723
+    },
+    'free': {
+        'BNB': 0.08994015,
+        'USD': 500.02723
+    },
+    'used': {
+        'BNB': 0.0,
+        'USD': 0.0
+    },
+    'total': {
+        'BNB': 0.08994015,
+        'USD': 500.02723
+    }
+    """

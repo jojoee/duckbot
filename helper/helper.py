@@ -52,3 +52,9 @@ def parse_to_dataclass(data: object):
     """
     json_str = json.dumps(data)
     return json.loads(json_str, object_hook=lambda d: SimpleNamespace(**d))
+
+
+def blackout(s: str, n_left: int = 4) -> str:
+    if len(s) <= n_left:
+        return ""
+    return "*" * len(s[:-n_left]) + s[-n_left:]
