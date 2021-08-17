@@ -61,8 +61,6 @@ def get_balance_coin_value(coin: str) -> float:
 
 
 def reblance():
-    now = datetime.datetime.now().replace(microsecond=0)
-
     try:
         symbol = f'{COIN}/USD'
         ticker: Ticker = parse_to_dataclass(FTX.fetch_ticker(symbol))
@@ -91,7 +89,7 @@ def reblance():
             res = pd.DataFrame(order_result.__dict__, columns=cols, index=[0])
             res.to_csv(STATEMENT_FILE_PATH, mode='a', header=False, index=False)
 
-            txt = f'SELL {symbol}   Price : {sell_price}   Unit : {sell_unit}'
+            txt = f'SELL {symbol}, ratio: {coin_ratio}, price: {sell_price}, unit: {sell_unit}'
             LOGGER.info(txt)
 
         elif coin_ratio < LOWER_LIMIT:
@@ -103,14 +101,14 @@ def reblance():
             res = pd.DataFrame(order_result.__dict__, columns=cols, index=[0])
             res.to_csv(STATEMENT_FILE_PATH, mode='a', header=False, index=False)
 
-            txt = f'BUY {symbol}   Price : {buy_price}   Unit : {buy_unit}'
+            txt = f'BUY {symbol}, ratio: {coin_ratio}, price: {buy_price}, unit: {buy_unit}'
             LOGGER.info(txt)
 
         else:
             ratio = round(coin_ratio * 100, 1)
             value = round(port_value, 2)
 
-            txt = f'{now}  Port Value($): {value} {COIN} Ratio: {ratio}%'
+            txt = f'port value($): {value}, coin: {COIN}, ratio: {ratio}%'
             LOGGER.debug(txt)
 
     except Exception as e:
