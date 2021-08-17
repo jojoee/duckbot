@@ -63,6 +63,13 @@ def get_balance_coin_value(coin: str) -> float:
 def reblance():
     try:
         symbol = f'{COIN}/USD'
+
+        # close all open orders
+        open_orders: List[LimitOrderInfo] = parse_to_dataclass(FTX.fetch_open_orders(symbol))
+        if len(open_orders) >= 1:
+            txt = FTX.cancel_all_orders(symbol)
+            LOGGER.info(txt)
+
         ticker: Ticker = parse_to_dataclass(FTX.fetch_ticker(symbol))
 
         sell_price = ticker.bid
@@ -74,12 +81,6 @@ def reblance():
         coin_ratio = coin_value / port_value
 
         cols = ['symbol', 'id', 'price', 'side', 'amount', 'datetime']
-
-        # close all open orders
-        open_orders: List[LimitOrderInfo] = parse_to_dataclass(FTX.fetch_open_orders(symbol))
-        if len(open_orders) >= 1:
-            message: parse_to_dataclass(FTX.cancel_all_orders(symbol))
-            LOGGER.info(message)
 
         if coin_ratio > UPPER_LIMIT:
             sell_unit = (coin_ratio - COIN_TARGET_PC / 100) * port_value / sell_price
