@@ -6,6 +6,8 @@ Duck learns trading bot. With his 1-3-inch-flying-algorithm makes, he rules them
 
 ![continuous integration](https://github.com/jojoee/cyclical/workflows/continuous%20integration/badge.svg?branch=master)
 
+![LINE notify screenshot](./asset/LINE-notify-screenshot.png)
+
 ## Getting Started
 
 1. Install [Python](https://www.python.org/) and [Conda](https://docs.conda.io/en/latest/)
