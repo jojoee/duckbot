@@ -39,3 +39,4 @@ Duck learns trading bot. With his 1-3-inch-flying-algorithm makes, he rules them
 ## Reference
 - Originally created by Pisut Oncharoen
 - https://docs.ftx.com/#rest-api
+
